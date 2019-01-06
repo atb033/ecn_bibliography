@@ -1,0 +1,71 @@
+\documentclass{thesisreport}
+
+
+\begin{document}
+
+ \include{thesisfront}  
+ 
+  \section*{Abstract}
+% \newpage
+ 
+ \section*{Acknowledgements}
+ 
+% \newpage
+ 
+ 
+ \section*{Notations}
+ 
+% \newpage
+
+  \section*{Abbreviations}
+ 
+ \newpage
+ 
+ \listoffigures
+ 
+\listoftables
+ 
+ \tableofcontents
+ 
+ 
+ \chapter*{Introduction}
+ \addcontentsline{toc}{chapter}{Introduction}	 % non-numbered chapters do not appear in table of contents by default
+ 
+ 
+ \chapter{Basics of Path Planning}
+ 
+ \section{First topic}
+ 
+ \section{Second topic}
+ 
+ \chapter{Path Planning in Robotics} 
+ 
+ \chapter{Work Outline}
+  
+ 
+ \chapter*{Conclusion}
+ \addcontentsline{toc}{chapter}{Conclusion}
+ 
+ \cite{euclides300}
+ 
+% % switch to A-B-C chaptering
+% \appendix	
+% 
+% \chapter{Proof of theorem }
+% \label{sec:prooftheorem}
+ 
+ 
+% \begin{proof}
+%\eqref{theo} was already demonstrated in \cite{euclides300}.
+%\end{proof}
+ 
+
+ \bibliographystyle{IEEEtran}
+ \addcontentsline{toc}{chapter}{Bibliography}
+ 
+ \bibliography{./biblio}
+ 
+ 
+ 
+ 
+\end{document}
