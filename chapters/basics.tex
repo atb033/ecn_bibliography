@@ -1,22 +1,72 @@
 %-------------TO BE COMPLETED-----------------
-%Path planning is the problem of finding a sequence of \textit{actions} to transform a system from an initial state to a goal state. The planning problem has been studied extensively in various fields like robotics, artificial intelligence, and control theory. In this chapter, we discuss the fundamentals of path planning.
+The planning problem has been studied extensively in various fields like robotics, artificial intelligence, and control theory. In this chapter, we discuss the fundamentals of path planning.
 
-%\section{Terminology}
-%\subsubsection*{Configuration Space}
-%The path planning problem can be precisely formulated by defining a world, $\mathcal{W}$, in which the robot $\mathcal{A}$ exists, an obstacle region, $\mathcal{O}\subset\mathcal{W}$, the \textit{configuration space}, $\mathcal{C}$, 
-%First, we study the popular algorithms used for discrete space planning. Then we 
-
-%A few concepts necessary to precisely define the path planning problem are now introduced. The world ($\mathcal{W}$) is a space in which the robot ($\mathcal{A}$) exists. 
-
-
-%The configuration space of a robot is the set of all configurations that could be achieved by it. For instance, let us consider a 2D robot that operates on a plane. Its configuration space is the 3D space defined by the special Euclidean group SE(2). 
-
-%-------------- TO BE COMPLETED-------------------
-\section{Terminology}
+\section{Preliminaries}
 Each distinct situation of a world is called a \textit{state}, $x$, and the set of all possible states is called a \textit{state space}, $X$. The state, $x$, can be transformed to $x'$, by applying an \textit{action}, $u$, as specified by a \textit{state transition function}, $f$, such that:
 \begin{align}
 	x' = f(x,u)
 \end{align}
-\section{Discrete Space Planning Algorithms}
+The set of all possible actions for each state is defined as the \textit{action space}, $U(x)$.
+
+%The system has an initial state, $x_I$, and a set of goal states, $X_G$. The aim of the planner is to find a sequence of actions that transforms the system from the initial state, $x_I$, to a final state, $x_G \subset X_G$.
+
+%The \textit{configuration space} of a robot is the set of all configurations that could be achieved by it. For instance, the configuration space of a rigid body that moves on a plane is the 3D space defined by the special Euclidean group SE(2). The configuration space, which may be considered as a special state space, is powerful abstraction tool that used to solve the path planning problem. 
+
+In path planning, we work with a special state space called the \textit{configuration space}, or C-space. The configuration space, $\mathcal{C}$, of a robot is the set of all possible configurations, $x$, that could be achieved by it. The real beauty of C-space is in the way it deals with the obstacles. Suppose that the world, $\mathcal{W}$, contains an obstacle region, $
+\mathcal{O}$. Assuming that the robot, $\mathcal{A}\subset\mathcal{W}$, the \textit{obstacle region}, $\mathcal{C}_{obs}\subseteq\mathcal{C}$, is defined as
+\begin{align}
+	\mathcal{C}_{obs} = \{x\in\mathcal{C} | \mathcal{A}(x)\cap\mathcal{O}\neq\emptyset\}
+\end{align}
+In other words, $\mathcal{C}_{obs}$ is the set of all configurations at which the robot intersects the obstacle region. The \textit{free space}, defined as, $\mathcal{C}_{free} = \mathcal{C} \backslash  \mathcal{C}_{obs}$, is the set of all collision free configurations of the robot. 
+
+Let $x_I \in \mathcal{C}_{free}$ and $x_G \in \mathcal{C}_{free}$ be the \textit{initial configuration} and  the \textit{final configuration} respectively. A path planning algorithm aims to compute a continuous path starting at $x_I$ and ending at $x_G$. 
+
+\subsection{Graph Search Algorithms}
+In this section, we cover the major graph search algorithms that will be useful in path planning. Forward search algorithms start at the initial state and explores the graph until encountering the goal state. The general template of such algorithms \cite{lavalle2006planning} is shown in Algorithm~\ref{alg:fsearch}.
+
+\begin{algorithm}
+\caption{Forward Search}\label{alg:fsearch}
+\begin{algorithmic}[1]
+%\Procedure{Euclid}{$a,b$}
+\State $Q$.Insert($x_I$) and mark $x_I$ as visited
+\While{$Q$ not empty}
+\State $x\gets Q$.GetFirst()
+\If{$x\in X_G$}
+\State \textbf{return} SUCCESS
+\EndIf
+\ForAll{$u\in U(x)$}
+\State $x'\gets f(x,u)$
+\If{$x'$ not visited}
+\State Mark $x'$ as visited
+\State $Q$.Insert($x'$)
+\Else
+\State Resolve duplicate $x'$
+\EndIf
+\EndFor
+\EndWhile
+\State \textbf{return} FAILURE
+\end{algorithmic}
+\end{algorithm}
+
+During the search, there will be three kinds of states. The \textit{unvisited} list consists of all the unexplored states of graph. If a state, along with all its next possible states, have been visited, it is added to the \textit{dead} list. The remaining states, i.e. the explored states with unexplored neighbours, forms the \textit{alive} list. As shown in the Algorithm~\ref{alg:fsearch}, the alive list is stored in a data structure $Q$. The main difference between the search algorithms is in the way they sort $Q$. 
+
+In \textit{breadth first search}, $Q$ is implemented as a First-In-First-Out (FIFO) queue. This results in a uniform expansion of the search frontier. If we make $Q$ a stack, the graph would be explored aggressively in an arbitrary direction, resulting in the \textit{depth first search}. 
+
+If we know the cost of the actions, we could use that to increase the efficiency of the search algorithm. In \textit{Dijkstra's algorithm}, $Q$ is sorted according to the \textit{cost-to-come} function, $C(x)$, which is defined as the minimum cost  of travelling from $x_I$ to $x$ according to the current knowledge. 
+
+In many cases, it is possible to obtain a heuristic estimate of the cost to reach the goal from any state. Let this function be called $\hat{G}(x)$. This knowledge can be exploited to reduce the number of states explored to reach the goal. The \textit{A* search algorithm} sorts $Q$ according to the sum $C(x) + \hat{G}{x}$.
+
+
+\section{Motion Planning Algorithms}
+
+\subsection{Grid Based Search}
+In grid based search, the configuration space is discretized into grids. Each grid point represents a configuration, and the robot may move to an adjacent grid, as long as the line between them is contained in $\mathcal{C}_{free}$. This discretizes the set of actions, and hence the grid search algorithms can be applied to find the path from the start to the goal. 
+
+Grid based search works well for low dimensional problems. However, this method is computationally infeasible for high-dimensional systems, since the number of points on the grid increase exponentially with configuration space dimension. 
+\subsection{Potential field based Search}
+In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
+
+At every instance, the robot tries to move in a direction along decreasing potential. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method will fail if the robot encounter a local minima.
+\subsection{Sampling-based Search}
 
 \section{Planning with Differential Constraints}
