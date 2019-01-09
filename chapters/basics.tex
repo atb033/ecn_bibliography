@@ -66,7 +66,26 @@ Grid based search works well for low dimensional problems. However, this method 
 \subsection{Potential field based Search}
 In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
 
-At every instance, the robot tries to move in a direction along decreasing potential. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method will fail if the robot encounter a local minima.
+At every instance, the robot tries to move in a direction along decreasing potential. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method will fail if the robot encounters a local minima.
 \subsection{Sampling-based Search}
+Sampling-based search algorithms are the leading methods to tackle higher-dimensional path planning problems. They have been successful in dealing with problems whose dimension is of the order of hundreds. Two major sampling-based methods, namely \textit{rapidly-exploring random trees} (RRT) and \textit{probabilistic roadmaps}
 
+The RRT algorithm explores the space by randomly sampling a space-filling tree. As shown in Algorithm~\ref{alg:rrt}, the tree is rooted at the initial configuration, and with each new sample, a vertex is added between it and the nearest state in tree. Once we obtain a connected graph between the initial state and the goal, search algorithms can be used to compute the best path. 
+
+\begin{algorithm}
+\caption{Rapidly-exploring Random Trees}\label{alg:rrt}
+\begin{algorithmic}[1]
+\State $G$.init($q_0$)
+\For{$i$ = 1 \textbf{to} $k$}
+\State $q_{rand}\gets$RAND\_CONFIG()
+\State $q_{near}\gets$NEAREST\_VERTEX($q_{rand},G$)
+\State $q_{new}\gets$NEW\_CONF($q_{near}, q_{rand}, \Delta q$)
+\State $G$.add\_vertex($q_{new}$)
+\State $G$.add\_edge($q_{near},q_{new}$)
+\EndFor
+\State \textbf{return} $G$
+\end{algorithmic}
+\end{algorithm}
+
+Probabilistic roadmap method is preferred if the initial and goal states are not fixed. This method consists of phases, a preprocessing and query phase. In the preprocessing stage, a random configuration is generated, and neighbours within a predefined distance are connected. This step is repeated until a dense graph is generated. In the query stage, the start and goal configurations are connected to the graph, and an appropriate search algorithm is used to find the path. 
 \section{Planning with Differential Constraints}
