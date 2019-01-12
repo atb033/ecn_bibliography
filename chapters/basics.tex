@@ -71,9 +71,18 @@ In grid based search, the configuration space is discretized into grids. Each gr
 Grid based search works well for low dimensional problems. However, this method is computationally infeasible for high-dimensional systems, since the number of points on the grid increase exponentially with configuration space dimension. 
 \subsection{Potential field based Search}
 \label{sec:pot_search}
-In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
+Potential field based approaches generate good results with minimal computations. In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
 
-At every instance, the robot tries to move in a direction along decreasing potential. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method will fail if the robot encounters a local minima.
+This method can be visualized as a particle moving on a 2D plane under gravity. The goal and the obstacles are represented by a basin and hills respectively. At every instance, the robot tries to move in a direction along decreasing potential, thereby finally reaching the goal. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method may find a non-optimal path, or no path at all if the particle is stuck in a local minima (see Figure.~\ref{fig:potential_search}).
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{./images/potential_search}
+\caption{Local minima in potential field based search. \cite{siciliano2010robotics}}
+\label{fig:potential_search}
+\end{figure}
+
+
 \subsection{Sampling-based Search}
 \label{sec:sampling_search}
 Sampling-based search algorithms are the leading methods to tackle higher-dimensional path planning problems. In this approach, the connectivity of $\mathcal{C}_{free}$ is explored by sampling random configurations and trying to connect in a network. Here, configurations and actions are represented by nodes and edges respectively. Two major sampling-based methods: \textit{rapidly-exploring random trees} (RRT) \cite{lavalle2006planning} and \textit{probabilistic roadmaps} \cite{kavraki1994probabilistic}, are discussed in this section.
@@ -114,34 +123,60 @@ In general, there are two approaches to deal with this problem. In the first app
 The second approach relies on the differential flatness \cite{mellinger2011minimum} property of the quadrotor dynamics to derive constraints on the trajectory and then solves an optimization problem to find the optimum trajectory. Some interesting state-of-the-art path planning methodologies are discussed in this section. 
 %--------------QUADROTOR MODELLING (MAYBE)---------------
 % Minimum snap
+
+\subsection{Sampling-Based Motion Planning}
+\label{sec:sampling_planning}
+%Gradient-Based Online Safe Trajectory Generation
+%for Quadrotor Flight in Complex Environments
+As mentioned before, the high dimensionality of the path planning problem makes it infeasible for simple-graph search based algorithms. Sampling-based methods perform better in this case, especially in cluttered environments. In this section, we briefly introduced some sampling based approaches. 
+
+Some popular sampling based path-planning algorithms include, RRT*, PRM* (Probabilistic Road Map*) and rapidly-exploding random graphs (RRG), which is an extension of RRT. The approach in \cite{webb2013kinodynamic}, the RRT* method is combined with a fixed-final-state-free-final-time controller to obtain asymptotic optimality. Closed-form solutions of optimal trajectories could be derived in this method. 
+
+Bry and Roy et al. \cite{bry2011rapidly} combined the belief roadmap with RRG to address the problem of motion planning in the presence of state uncertainty. The resultant search tree in belief space is provably convergent to the optimal path. Shen et al. \cite{shen2017gradient} used RRG method, along with a trajectory optimization framework, to generate a safe, smooth and dynamically feasible trajectory based on the piecewise line segment initial path. 
+
 \subsection{Polynomial-Based Motion Planning}
 \label{sec:poly_based_planning}
-In \cite{mellinger2011minimum}, a methodology to generate a \textit{minimum-snap trajectory}, that passes through the waypoints while satisfying the constraints on velocity and accleration, is developed. The trajectory is represented by piecewise polynomial functions and the trajectory generation function is formulated as a constrained quadratic programming problem. 
+A trivial trajectory that passes through a set of \textit{waypoints} is the one that interpolates them using straight lines. Evidently, this trajectory isn't efficient as the robot has to come to rest at each waypoint. In this section, we discuss in detail the work by Kumar et al. \cite{mellinger2011minimum}, which generates a \textit{minimum-snap trajectory} that passes through the waypoints while satisfying the constraints on velocity and accleration. 
 
-In this method, the motor commands, and hence the accelerations, are proportional to the snap, or the fourth derivative, of path. Minimizing the snap gives rise to smooth trajectories that avoid paths involving extreme control inputs. Moreover, the resulting smoothness helps in maintaining the quality of onboard sensor measurements. Then, the segment times are optimized to minimize the total time. 
+In this work, the trajectories are parametrized as piecewise polynomial functions of $n^{th}$ order over $m$ time intervals as:
+\begin{align}
+  \sigma_{t} =
+    \begin{cases}
+      \sum_{i=0}^n \sigma_{Ti1}t^i& t_0\leq t\leq t_1\\
+      \sum_{i=0}^n \sigma_{Ti2}t^i& t_1\leq t\leq t_2\\
+      &\vdots\\
+      \sum_{i=0}^n \sigma_{Tim}t^i& t_{m-1}\leq t\leq t_m
+    \end{cases} 
+\end{align}
+The decision variable vector, $\textbf{c}$, is a $3mn\times 1$ vector consisting of the constants $\sigma_{T{ij}}$.The optimization program minimizes the $k_r^{th}$ derivative of the square of the position as:
+\begin{align}
+\begin{split}
+\min_{\textbf{c}} \quad & \int_{t_0}^{t_f} \left\Vert\frac{d^{k_r}\textbf{r}_T}{dt^{k_r}})\right\Vert^2 dt\\
+\textrm{s.t.} \quad & \textbf{r}_{T}=\textbf{r}_w, \quad w=0,\ldots,m\\
+  &\left.\frac{d^j x_T}{dt^j}\right\rvert_{t=t_w}=0\text{ or free,}w=0,\ldots,m;j=1,\ldots,k_r\\
+  &\left.\frac{d^j y_T}{dt^j}\right\rvert_{t=t_w}=0\text{ or free,}w=0,\ldots,m;j=1,\ldots,k_r\\
+  &\left.\frac{d^j z_T}{dt^j}\right\rvert_{t=t_w}=0\text{ or free,}w=0,\ldots,m;j=1,\ldots,k_r
+\end{split}
+\end{align}
+Here, $\textbf{r}_T=[x_T,y_T,z_T]^\top$ and $\textbf{r}_i=[x_i,y_i,z_i]^\top$. It is also ensured that the first $k_r$ derivatives of the position is continuous. The optimization problem can be formulated as a quadratic program:
+\begin{align}
+\begin{split}
+\min \quad & \textbf{c}^\top \textbf{H} \textbf{c} + \textbf{f}^\top\textbf{c} \\
+\textrm{s.t.} \quad &\textbf{Ac}\leq \textbf{b}
+\end{split}
+\end{align}
 
-%Minimum-snap polynomial splines have proven very effective as quadrotor trajectories, since the motor commands and attitude accelerations of the vehicle are proportional to the snap, or forth derivative, of the path [6]. Minimizing the snap of a trajectory quantifies a notion of “smoothness” that is desirable for maintaining the quality of onboard sensor measurements as well as avoiding paths that would require abrupt or excessive control inputs.
-
-
-%\subsection{Quadratic-Programming based Trajectory Generation}
-%Quadratic programming based approaches have produced outstanding results in deriving collision-free trajectories in real time. 
+As the inputs to the system was found to be functions of the fourth derivatives of positions, $k_r$ was chosen to be 4, and hence the snap was minimized. This rise to smooth trajectories that avoid paths involving extreme control inputs. Moreover, the resulting smoothness helps in maintaining the quality of onboard sensor measurements. Then, the segment times are optimized to minimize the total time. 
 
 The method presented in  \cite{richter2016polynomial} jointly optimizes polynomial path segments in an unconstrained quadratic program to solve the minimum-snap trajectory problem. The output is numerically stable for high-order polynomials and large numbers of segments. As shown in Figure.~\ref{fig:bry_poly}, they generated fast flight paths through cluttered environments by coupling this technique with an appropriate kinematic planner. In addition, an implicit segment time allocation strategy, based on a single user-defined parameter on aggressiveness, led to far superior results.
 
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.6\textwidth]{./images/bry_poly.png}
 \caption{Minimum-snap trajectory generation using unconstrained quadratic program. \cite{richter2016polynomial}}
 \label{fig:bry_poly}
 \end{figure}
 
-\subsection{Sampling-Based Motion Planning}
-\label{sec:sampling_planning}
-%Gradient-Based Online Safe Trajectory Generation
-%for Quadrotor Flight in Complex Environments
-Sampling-Based methods perform better in cluttered environments. Some popular sampling based path-planning algorithms include, RRT*, PRM* (Probabilistic Road Map*) and rapidly-exploding random graphs (RRG), which is an extension of RRT. The approach in \cite{webb2013kinodynamic}, the RRT* method is combined with a fixed-final-state-free-final-time controller to obtain asymptotic optimality. Closed-form solutions of optimal trajectories could be derived in this method. 
-
-Bry and Roy et al. \cite{bry2011rapidly} combined the belief roadmap with RRG to address the problem of motion planning in the presence of state uncertainty. The resultant search tree in belief space is provably convergent to the optimal path. Shen et al. \cite{shen2017gradient} used RRG method, along with a trajectory optimization framework, to generate a safe, smooth and dynamically feasible trajectory based on the piecewise line segment initial path. 
 
 \subsection{Search-Based Motion Planning}
 \label{sec:search_based_planning}
@@ -149,7 +184,7 @@ Bry and Roy et al. \cite{bry2011rapidly} combined the belief roadmap with RRG to
 %Linear Quadratic Minimum Time Control
 Recent work by Kumar et al. \cite{kumar2017search} aims at computing globally optimum, collision-free, minimum-time, dynamically-feasible trajectories in real-time. When the geometric path is first computed and then smoothened, the generated trajectory may not contain a globally optimum trajectory as this approach does not consider the initial dynamics of the robot. As shown in Figure.~\ref{fig:search_kumar}, the trajectory generated by this approach is superior to other approaches. 
 
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.6\textwidth]{./images./search_kumar.png}
 \caption{Path planning performed at non-zero inital velocity. \cite{kumar2017search} generates the more natural and time optimal magenta curve, where as other approaches gives rise to the red-dashed curve.}
@@ -161,7 +196,7 @@ Even though others have worked on generating time-optimal trajectories, the algo
 % Model Predictive Control
 \section{Control of Quadrotors}
 \label{sec:control_quadrotors}
-Due to its recent popularity, practically all the major control techniques have been used to control technique have been treid on quadrotors. Linear control techniques \cite{seigwart2004pid} have been used to control quadrotors by linearizing their dynamics around an operation point, typically the hover position. Better performance is obtained by non-linear control methods like backstepping, sliding mode \cite{seigwart2005backstepping} and feedback linearization \cite{lewis2009dynamic}.
+Due to its recent popularity, practically all the major control techniques have been used to control technique have been tried on quadrotors. Linear control techniques \cite{seigwart2004pid} have been used to control quadrotors by linearizing their dynamics around an operation point, typically the hover position. Better performance is obtained by non-linear control methods like backstepping, sliding mode \cite{seigwart2005backstepping} and feedback linearization \cite{lewis2009dynamic}.
 
 An accurate model of the system is necessary for the above-mentioned control techniques to generate satisfactory results. Modelling errors can considerably deteriorate their performance. Adaptive controllers \cite{kumar2011design} perform well in these cases by correcting the errors in model parameter estimates.
 

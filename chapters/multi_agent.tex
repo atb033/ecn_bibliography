@@ -1,4 +1,4 @@
-The multi-agent path finding problem (MAPF) is more challenging than the single-agent problem due to the high dimension of its configuration space. In this chapter, we introduce the various approaches of tackling problem. 
+The multi-agent path finding problem (MAPF) is more challenging than the single-agent problem due to the high dimension of its configuration space. Broadly speaking, there are two approaches to solve this problem: planning and reacting. In the planning approach, collision-free paths are generated ahead of time, whereas the reactive approach uses online collision avoidance schemes while encountering hazardous situations. In this chapter, we introduce the various approaches of tackling problem. 
 
 \section{Graph Search Methods}
 These approaches compute the path by applying the graph-search algorithms on the configuration space of the multi-robot system, which is the Cartesian product of the configuration spaces of each robot. Here, robot-robot collisions are expressed as configuration space obstacles. The full configuration space grows exponentially with the number of robots, thus making the standard search algorithms computationally infeasible. 
@@ -47,8 +47,45 @@ The graph plans from these grid based search methods cannot be directly interpre
 \section{Continuous optimization schemes}
 Some researchers the MAPF problem in a continuous setting by formulating it as an optimisation problem with the trajectories defined by its decision variables. These methods generate smooth solutions for small fleets of robots. 
 
+D’Andrea et al. \cite{augugliaro2012generation}, solves this problem using sequential quadratic programming. Suppose we have $N$ vehicles, and $K$ time steps. The position of the vehicle $i$ at time-step $k$ is denoted as $p_i[k]$. The velocity and acceleration equations are:
+\begin{align}
+\begin{split}
+&v_i[k+1]=v_i[k]+ha_i[k]\\
+&p_i[k+1]=p_i[k] + hv_i[k] + \frac{h^2}{2}a_i[k],
+\end{split}
+\end{align}
+The optimization variable $\chi\in \mathbb{R}^{3NK}$ is made of the accelerations of the vehicles at each time step. The velocity and acceleration of the vehicle $i$ at time $k$ can also be written as:
+\begin{align}
+\begin{split}
+&v_i[k]=v[1] + h(a_i[1] + a_i[2] +\ldots+a_i[k-1])\\
+&p_i[k]=p_i[1] + h(k-1)v_i[1] + \frac{h^2}{2}\left((2k-3)a_i[1] + (2k-5)a_i[2]+\ldots+a_i[k-1]\right))
+\end{split}
+\end{align}
+The objective function is the sum of the total thrust at each step can be written as:
+\begin{align}
+f_0=\sum_{i=1}^N\sum_{k=1}^K\left\Vert a_i[k]+g\right\Vert
+\end{align}
+where, $g$ is the gravity vector. This function can be expressed as a quadratic function of the optimization variable $\chi$ 
+\begin{align}
+f_0(\chi) = \chi^\top P\chi + q^\top \chi + r
+\end{align}
 
+The fixed initial and final states gives rise to some equality constraints. Similarly, the limits on the workspace, as well as the dynamics limits of the quadrotor creates inequality constraints on the position, velocity, acceleration, and jerk. If the robots should be at a safe distance of $R$ between each other to avoid collisions, the following non-convex constraint must be imposed:
+\begin{align}
+\Vert p_i[k]-p_j[k]\Vert_2 \geq R
+\end{align} 
+Using sequential convex programming, these constraints can be replaced with convex approximations around a previous solution $\chi^q$ using a first order Taylor expansion.
+
+All these constraints are expressed in the form:
+\begin{align}
+\begin{split}
+A_{eq} \chi = b_{eq}\\
+A_{in} \chi \leq b_{in}
+\end{split}
+\end{align}
+and finally an optimum solution is found using quadratic programming.
 \section{Planning with time offsets}
+
 \section{Velocity Profile Methods}
 \section{Collision Avoidance based Methods}
 \subsection{Nonlinear Model Predictive Control}
