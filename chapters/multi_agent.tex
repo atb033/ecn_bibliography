@@ -65,25 +65,26 @@ The objective function is the sum of the total thrust at each step can be writte
 \begin{align}
 f_0=\sum_{i=1}^N\sum_{k=1}^K\left\Vert a_i[k]+g\right\Vert
 \end{align}
-where, $g$ is the gravity vector. This function can be expressed as a quadratic function of the optimization variable $\chi$ 
-\begin{align}
-f_0(\chi) = \chi^\top P\chi + q^\top \chi + r
-\end{align}
-
-The fixed initial and final states gives rise to some equality constraints. Similarly, the limits on the workspace, as well as the dynamics limits of the quadrotor creates inequality constraints on the position, velocity, acceleration, and jerk. If the robots should be at a safe distance of $R$ between each other to avoid collisions, the following non-convex constraint must be imposed:
+where, $g$ is the gravity vector. This function can be expressed as a quadratic function of the optimization variable $\chi$. The fixed initial and final states gives rise to some equality constraints. Similarly, the limits on the workspace, as well as the dynamics limits of the quadrotor creates inequality constraints on the position, velocity, acceleration, and jerk. If the robots should be at a safe distance of $R$ between each other to avoid collisions, the following non-convex constraint must be imposed:
 \begin{align}
 \Vert p_i[k]-p_j[k]\Vert_2 \geq R
 \end{align} 
-Using sequential convex programming, these constraints can be replaced with convex approximations around a previous solution $\chi^q$ using a first order Taylor expansion.
-
-All these constraints are expressed in the form:
+Using sequential convex programming, these constraints can be replaced with convex approximations around a previous solution $\chi^q$ using a first order Taylor expansion. The minimization problem can now be written as:
 \begin{align}
 \begin{split}
-A_{eq} \chi = b_{eq}\\
-A_{in} \chi \leq b_{in}
+\min \quad &f_0(\chi) = \chi^\top P\chi + q^\top \chi + r \\
+\text{s.t.} \quad &A_{eq}\chi=b_{eq}\\&A_{in}\chi\leq b_{in}
 \end{split}
 \end{align}
-and finally an optimum solution is found using quadratic programming.
+The optimum solution was found using QP. A demonstration of this method can be seen in Figure
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/dandrea_scp.png}
+\caption{Multi-agent trajectory planning using sequential quadratic programming. \cite{augugliaro2012generation}}
+\end{figure}
+
+In \cite{mellinger2012mixed}, a Mixed-Integer Quadratic Program (MIQP) is solved to generate feasible paths. These methods are capable of creating smooth, optimal solutions. However, these methods are often tightly and hence do not scale  up well to large teams. 
 \section{Planning with time offsets}
 
 \section{Velocity Profile Methods}
