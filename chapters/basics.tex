@@ -1,8 +1,11 @@
 %-------------TO BE COMPLETED-----------------
-The planning problem has been studied extensively in various fields like robotics, artificial intelligence, and control theory. In this chapter, we discuss the fundamentals of path planning.
+The planning problem has been studied extensively in various fields like robotics, artificial intelligence, and control theory. In robotics, a classical example of the path planning problem is the \textit{piano-mover's problem}, where the aim is to move a piano from one position to another without colliding with any obstacle. Currently, this problem covers other complications such as non-holonomy, uncertainties, and dynamics.
 
+This chapter covers the preliminaries of path planning and its application on a single agent. The preliminaries are covered in Section.~\ref{sec:prelims}, with topics like \textit{configuration space} and \textit{graph search algorithms}. Then the basic path planning methods are introduced in Section.~\ref{sec:basic_motion_planning}. Section.~\ref{sec:planning_quadrotors} presents the applications of advanced planning methods for quadrotos. Finally, the control methods are shown in Section.~\ref{sec:control_quadrotors}.
 \section{Preliminaries}
+\label{sec:prelims}
 \subsection{Configuration Space}
+\label{sec:config_space}
 Each distinct situation of a world is called a \textit{state}, $x$, and the set of all possible states is called a \textit{state space}, $X$. The state, $x$, can be transformed to $x'$, by applying an \textit{action}, $u$, as specified by a \textit{state transition function}, $f$, such that:
 \begin{align}
 	x' = f(x,u)
@@ -23,6 +26,7 @@ In other words, $\mathcal{C}_{obs}$ is the set of all configurations at which th
 Let $x_I \in \mathcal{C}_{free}$ and $x_G \in \mathcal{C}_{free}$ be the \textit{initial configuration} and  the \textit{final configuration} respectively. A path planning algorithm aims to compute a continuous path starting at $x_I$ and ending at $x_G$. 
 
 \subsection{Graph Search Algorithms}
+\label{sec:graph_search_algo}
 In this section, we cover the major graph search algorithms that will be useful in path planning. Forward search algorithms start at the initial state and explores the graph until encountering the goal state. The general template of such algorithms \cite{lavalle2006planning} is shown in Algorithm~\ref{alg:fsearch}.
 
 \begin{algorithm}
@@ -59,13 +63,13 @@ In many cases, it is possible to obtain a heuristic estimate of the cost to reac
 
 
 \section{Basic Motion Planning Methods}
-
+\label{sec:basic_motion_planning}
 \subsection{Grid Based Search}
+\label{sec:grid_search}
 In grid based search, the configuration space is discretized into grids. Each grid point represents a configuration, and the robot may move to an adjacent grid, as long as the line between them is contained in $\mathcal{C}_{free}$. This discretizes the set of actions, and hence the grid search algorithms can be applied to find the path from the start to the goal. 
 
 Grid based search works well for low dimensional problems. However, this method is computationally infeasible for high-dimensional systems, since the number of points on the grid increase exponentially with configuration space dimension. 
 \subsection{Potential field based Search}
-<<<<<<< HEAD
 \label{sec:pot_search}
 Potential field based approaches generate good results with minimal computations. In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
 
@@ -78,11 +82,9 @@ This method can be visualized as a particle moving on a 2D plane under gravity. 
 \label{fig:potential_search}
 \end{figure}
 
-=======
-In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
->>>>>>> parent of 803a603... completed chapter 1: basics of path planning
 
 \subsection{Sampling-based Search}
+\label{sec:sampling_search}
 Sampling-based search algorithms are the leading methods to tackle higher-dimensional path planning problems. In this approach, the connectivity of $\mathcal{C}_{free}$ is explored by sampling random configurations and trying to connect in a network. Here, configurations and actions are represented by nodes and edges respectively. Two major sampling-based methods: \textit{rapidly-exploring random trees} (RRT) \cite{lavalle2006planning} and \textit{probabilistic roadmaps} \cite{kavraki1994probabilistic}, are discussed in this section.
 
 The RRT algorithm explores the space by randomly sampling a space-filling tree. As shown in Algorithm~\ref{alg:rrt}, the tree is rooted at the initial configuration, and with each new sample, a vertex is added between it and the nearest state in tree. Once we obtain a connected graph between the initial state and the goal, search algorithms can be used to compute the best path. 
@@ -99,12 +101,13 @@ The RRT algorithm explores the space by randomly sampling a space-filling tree. 
 \State $G$.add\_edge($q_{near},q_{new}$)
 \EndFor
 \State \textbf{return} $G$
+
 \end{algorithmic}
 \end{algorithm}
-
 Probabilistic roadmap is the preferred method if the initial and goal states are not fixed. This method consists of two stages: a preprocessing and query stages. In the preprocessing stage, a random configuration is generated, and neighbours within a predefined distance are connected. This step is repeated until a dense graph is generated. In the query stage, the start and goal configurations are connected to the graph, and an appropriate search algorithm is used to find the path. 
 
 \section{Motion Planning for Quadrotors}
+\label{sec:planning_quadrotors}
 %Reasons why we need different algorithm for quadrotors
 % real-time / fast computation
 % velocity/acceleration limits
@@ -120,11 +123,6 @@ In general, there are two approaches to deal with this problem. In the first app
 The second approach relies on the differential flatness \cite{mellinger2011minimum} property of the quadrotor dynamics to derive constraints on the trajectory and then solves an optimization problem to find the optimum trajectory. Some interesting state-of-the-art path planning methodologies are discussed in this section. 
 %--------------QUADROTOR MODELLING (MAYBE)---------------
 % Minimum snap
-<<<<<<< HEAD
-=======
-\subsection{Polynomial-Based Motion Planning}
-In \cite{mellinger2011minimum}, a methodology to generate a \textit{minimum-snap trajectory}, that passes through the waypoints while satisfying the constraints on velocity and accleration, is developed. The trajectory is represented by piecewise polynomial functions and the trajectory generation function is formulated as a constrained quadratic programming problem. 
->>>>>>> parent of 803a603... completed chapter 1: basics of path planning
 
 \subsection{Sampling-Based Motion Planning}
 \label{sec:sampling_planning}
@@ -170,9 +168,8 @@ Here, $\textbf{r}_T=[x_T,y_T,z_T]^\top$ and $\textbf{r}_i=[x_i,y_i,z_i]^\top$. I
 
 As the inputs to the system was found to be functions of the fourth derivatives of positions, $k_r$ was chosen to be 4, and hence the snap was minimized. This rise to smooth trajectories that avoid paths involving extreme control inputs. Moreover, the resulting smoothness helps in maintaining the quality of onboard sensor measurements. Then, the segment times are optimized to minimize the total time. 
 
-The method presented in  \cite{richter2016polynomial} jointly optimizes polynomial path segments in an unconstrained quadratic program to solve the minimum-snap trajectory problem. The output is numerically stable for high-order polynomials and large numbers of segments. They generated fast flight paths through cluttered environments by coupling this technique with an appropriate kinematic planner. Along with an implicit segment time allocation strategy, based on a single user-defined parameter on aggressiveness, they were able to generate far superior results.
+The method presented in  \cite{richter2016polynomial} jointly optimizes polynomial path segments in an unconstrained quadratic program to solve the minimum-snap trajectory problem. The output is numerically stable for high-order polynomials and large numbers of segments. As shown in Figure.~\ref{fig:bry_poly}, they generated fast flight paths through cluttered environments by coupling this technique with an appropriate kinematic planner. In addition, an implicit segment time allocation strategy, based on a single user-defined parameter on aggressiveness, led to far superior results.
 
-<<<<<<< HEAD
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.6\textwidth]{./images/bry_poly.png}
@@ -180,25 +177,13 @@ The method presented in  \cite{richter2016polynomial} jointly optimizes polynomi
 \label{fig:bry_poly}
 \end{figure}
 
-=======
-%We show that this minimum-snap technique can be coupled with an appropriate
-%kinematic planner to generate fast, graceful flight paths in cluttered environments,
-%while accounting for collisions of the resulting polynomial trajectories.
-%This combination of search and optimization significantly outperforms pure searchbased
-%planning methods in computational performance. Finally, we modify their
-%strategy of allocating time along the trajectory to allow the planner to automatically
-%adjust to widely varying size scales with a single user-set parameter on aggressiveness.
-
-\subsection{Sampling-Based Motion Planning}
-%Gradient-Based Online Safe Trajectory Generation
-%for Quadrotor Flight in Complex Environments
->>>>>>> parent of 803a603... completed chapter 1: basics of path planning
 
 \subsection{Search-Based Motion Planning}
+\label{sec:search_based_planning}
 %Search-based Motion Planning for Quadrotors using
 %Linear Quadratic Minimum Time Control
+Recent work by Kumar et al. \cite{kumar2017search} aims at computing globally optimum, collision-free, minimum-time, dynamically-feasible trajectories in real-time. When the geometric path is first computed and then smoothened, the generated trajectory may not contain a globally optimum trajectory as this approach does not consider the initial dynamics of the robot. As shown in Figure.~\ref{fig:search_kumar}, the trajectory generated by this approach is superior to other approaches. 
 
-<<<<<<< HEAD
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.6\textwidth]{./images./search_kumar.png}
@@ -216,19 +201,12 @@ Due to its recent popularity, practically all the major control techniques have 
 An accurate model of the system is necessary for the above-mentioned control techniques to generate satisfactory results. Modelling errors can considerably deteriorate their performance. Adaptive controllers \cite{kumar2011design} perform well in these cases by correcting the errors in model parameter estimates.
 
 \textit{Model predictive control} (MPC) refers to a set of controllers that use a model to compute inputs from the current time to a future time in order to optimise the behaviour of a model along the input trajectory. Since it is a computationally intensive algorithm, it was used in slow systems like chemical plants and oil refineries. Due to the recent increase in computational capabilities, MPC have become popular in robotics. 
-=======
-
-% Model Predictive Control
-\section{Nonlinear Model Predictive Control}
-Model predictive control (MPC) refers to a set of controllers
-that use a model to compute inputs from the current time to
-a future time in order to optimise the behaviour of a model
-along the input trajectory. Since it is a computationally intensive algorithm, it was used in slow systems like chemical plants and oil refineries. Due to the recent increase in computational capabilities, MPC have become popular in robotics. 
->>>>>>> parent of 803a603... completed chapter 1: basics of path planning
 
 MPC is used to generate trajectories interpolating a given set of way-points \cite{singh2001trajectory} by calculating optimal controls online to minimize a cost function within a receding horizon. The constraints of the problem can be incorporated to the optimal control problem (OCP). In \cite{kamel2015fast}, a fast nonlinear model predictive control (NMPC) approach based on a geometric formulation of the error to track the MAV attitude on the SO(3) special orthogonal group. 
 
-Since the constrained optimization problem is computationally intensive, a trade-off has to be made between time horizon and policy lag. In \cite{neunert2016fast}, an unconstrained MPC problem is solved using Sequential Linear Quadratic (SLQ) solver, and trajectories of multiple seconds were generated within a few milliseconds. NMPC usually acts as a local planner for quadrotors. But this work combines trajectory optimization and trajectory control in a single approach.
+Since the constrained optimization problem is computationally intensive, a trade-off has to be made between time horizon and policy lag. This trade-off is alleviated in \cite{neunert2016fast} by solving an unconstrained MPC problem using Sequential Linear Quadratic (SLQ) solver. By combining trajectory optimization and trajectory contol, this approach generated trajectories of multiple seconds within a few milliseconds.
+
+Now that we have introduced the basics of path planning, and its application to single-agent systems, we move ahead to deal with more challenging multi-agent problems in the next chapter. 
 
 
 
