@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 The multi-agent path finding problem (MAPF) is more challenging than the single-agent problem due to the high dimension of its configuration space. Broadly speaking, there are two approaches to solve this problem: planning and reacting. In the planning approach, collision-free paths are generated ahead of time, whereas the reactive approach uses online collision avoidance schemes while encountering hazardous situations. In this chapter, we introduce the various approaches of tackling problem. 
 
 \section{Graph Search Methods}
@@ -93,9 +94,55 @@ Paradoxically, coupling the goal-assignment with trajectory planning reduces the
 
 In \cite{turpin2014goal}, a graph $G$, which has the dimensionality of a single robot is first generated, and then the assignment problem is solved using Hungarian-algorithm \cite{kuhn1955hungarian}. Collisions are avoided by adding time offsets in the trajectories. This method was proven to have a computational complexity that is cubic in the number of robots, which is a significant improvement from the expected exponential complexity. However, due to the time offsets, this method leads to high execution time.
 \section{Velocity Profile Methods}
+Some researchers address this problem using velocity profile methods\cite{peng2005coordinating}. First, the optimal path for each robot is computed without considering robot-robot collisions. Then the robots are coordinated so that they do not collide. It must be noted that the robots always stay at their best paths. 
 
-\section{Collision Avoidance based Methods}
+Let $\mathcal{S}_i=[0,1]$  be the set of parameters that represent the position of the robot along its trajectory. These parameters constitute the coordination space, with $s_{init}=(0,0,\ldots,0)$ and $s_{goal}=(1,1,\ldots,1)$. A collision pair $\mathcal{CP}_{ij}$ is defined as a pair of configurations where robots $\mathcal{A}_i$ and $\mathcal{A}_j$ collide. Each robots paths are decomposed into collision segments and collision-free segments. 
+
+Since each robot has dynamics constraints on its velocity and accelerations, there is an upper and lower limit to the time in which it can traverse a segment $k$ represented by $\Delta T_{ik}^{max}$ and $\Delta T_{ik}^{min}$ respectively. If $\tau_{ik}$ is the traversal time of robot $i$ in segment $k$, the traversal time constraint can be written as:
+\begin{align}
+\Delta T_{ik}^{max}\geq \tau_{ik} \geq \Delta T_{ik}^{min}
+\end{align}
+Let $k$ and $h$ be the collision zones for two robots $\mathcal{A}_i$ and $\mathcal{A}_j$ respectively. If $\mathcal{A}_i$ exits segment $k$ before $\mathcal{A}_j$ enters segment $h$, $t_{jh}\geq t_{i(k+1)}$, or if $\mathcal{A}_j$ exists first, $t_{ik}\geq t_{j(h+1)}$. These constraints can be written with a binary variable $\delta_{ijkh}\in {0,1}$ and a sufficiently large number $M$ as:
+\begin{align}
+\begin{split}
+&t_{jh}-t_{i(k+1)} + M(1-\delta_{ijkh})\geq 0\\
+&t_{ik}-t_{j(h+1)}+M\delta_{ijkh} \geq 0
+\end{split}
+\end{align}
+A feasible solution was obtained by solving the following Mixed-Integer Linear Problem with the set of traversal times as the decision variables $\tau_{ij}$ and the binary variables $\delta_{ijkh}$ as the decision variables:
+\begin{align}
+\begin{split}
+\min \quad &C_{max}\\
+\text{s.t.} \quad &C_{max}\geq t_{i,last} + \tau_{last}~~~\text{for i=1...n}\\
+&t_{ik}\geq 0\\
+&t_{i(k+1)}=t_{ik}+\tau_{ik}\\
+&\Delta T_{ik}^{max}\geq \tau_{ik} \geq \Delta T_{ik}^{min}\\
+&t_{jh}-t_{i(k+1)} + M(1-\delta_{ijkh})\geq 0\\
+&t_{ik}-t_{j(h+1)}+M\delta_{ijkh} \geq 0\\
+&\delta_{ijkh}\in {0,1}
+\end{split}
+\end{align}
+
+This method can be extended to handle \textit{kineodynamic} constraints well. However, this doesn't lead to a global time-optimal solution as the free space is not fully exploited.
+\section{Collision-Avoidance Approaches}
 \subsection{Nonlinear Model Predictive Control}
 \subsection{Velocity Obstacle}
 
 \section{Spline-based refinement of Waypoints}
+=======
+ \subsection{Graph Search Methods}
+ \subsubsection{M*}
+ \subsubsection{Conflict based search}
+ 
+ \subsection{Continuous optimization schemes}
+
+ \subsection{Planning with time offsets}
+
+ \subsection{Velocity Profile Methods}
+
+ \subsection{Collision Avoidance based Methods}
+ \subsubsection{Nonlinear Model Predictive Control}
+ \subsubsection{Velocity Obstacle}
+
+ \subsection{Spline-based refinement of Waypoints}
+>>>>>>> parent of 803a603... completed chapter 1: basics of path planning
