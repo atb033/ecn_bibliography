@@ -86,14 +86,10 @@ The optimum solution was found using QP. A demonstration of this method can be s
 \end{figure}
 
 In \cite{mellinger2012mixed}, a Mixed-Integer Quadratic Program (MIQP) is solved to generate feasible paths. These methods are capable of creating smooth, optimal solutions. However, these methods are often tightly and hence do not scale  up well to large teams. 
+\section{Planning with time offsets}
 
-\section{Planning with Goal Assignment}
-In many applications of multi-agent systems, the agents are interchangeable. For instance, in case of first-response and search and rescue applications, the aim is to explore the maximum area with a limited number of robots. In the context of the path planning problem, this translates to having no one-to-one correlation between the initial and goal locations. Therefore, goal-assignment should also be a part of the planning algorithm to obtain the best results. 
-
-Paradoxically, coupling the goal-assignment with trajectory planning reduces the complexity of the problem \cite{turpin2013trajectory}. Koenig et al. \cite{ma2016optimal} presented a Conflict-Based Min-Cost-Flow (CBM) algorithm to solve this problem. CBM works in two stages: in stage 1, min-cost max-flow algorithm \cite{goldberg1987solving} to assign the agents to goals, and in stage 2, CBS is used to find collision-free paths. This algorithm was proved to be complete and optimal, and demonstrated to be scalable. 
-
-In \cite{turpin2014goal}, a graph $G$, which has the dimensionality of a single robot is first generated, and then the assignment problem is solved using Hungarian-algorithm \cite{kuhn1955hungarian}. Collisions are avoided by adding time offsets in the trajectories. This method was proven to have a computational complexity that is cubic in the number of robots, which is a significant improvement from the expected exponential complexity. However, due to the time offsets, this method leads to high execution time.
 \section{Velocity Profile Methods}
+<<<<<<< HEAD
 Some researchers address this problem using velocity profile methods\cite{peng2005coordinating}. First, the optimal path for each robot is computed without considering robot-robot collisions. Then the robots are coordinated so that they do not collide. It must be noted that the robots always stay at their best paths. 
 
 Let $\mathcal{S}_i=[0,1]$  be the set of parameters that represent the position of the robot along its trajectory. These parameters constitute the coordination space, with $s_{init}=(0,0,\ldots,0)$ and $s_{goal}=(1,1,\ldots,1)$. A collision pair $\mathcal{CP}_{ij}$ is defined as a pair of configurations where robots $\mathcal{A}_i$ and $\mathcal{A}_j$ collide. Each robots paths are decomposed into collision segments and collision-free segments. 
@@ -125,6 +121,9 @@ A feasible solution was obtained by solving the following Mixed-Integer Linear P
 
 This method can be extended to handle \textit{kineodynamic} constraints well. However, this doesn't lead to a global time-optimal solution as the free space is not fully exploited.
 \section{Collision-Avoidance Approaches}
+=======
+\section{Collision Avoidance based Methods}
+>>>>>>> parent of f7b2d16... planning with goal assignment
 \subsection{Nonlinear Model Predictive Control}
 \subsection{Velocity Obstacle}
 
