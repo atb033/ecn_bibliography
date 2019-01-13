@@ -80,7 +80,7 @@ The optimum solution was found using QP. A demonstration of this method can be s
 
 \begin{figure}
 \centering
-\includegraphics[width=0.9\textwidth]{./images/dandrea_scp.png}
+\includegraphics[width=\textwidth]{./images/dandrea_scp.png}
 \caption{Multi-agent trajectory planning using sequential quadratic programming. \cite{augugliaro2012generation}}
 \end{figure}
 
@@ -122,9 +122,29 @@ A feasible solution was obtained by solving the following Mixed-Integer Linear P
 \end{split}
 \end{align}
 
-This method can be extended to handle \textit{kineodynamic} constraints well. However, this doesn't lead to a global time-optimal solution as the free space is not fully exploited.
+This method can be extended to handle \textit{kineodynamic} constraints well. However, this method doesn't generate the global time-optimal solution as the free space is not fully exploited.
 \section{Collision-Avoidance Approaches}
-\subsection{Nonlinear Model Predictive Control}
-\subsection{Velocity Obstacle}
+In collision-avoidance approaches, each robot plans it trajectory individually, and conflicts are resolved in real-time using collision avoidance techniques. These methods produce good results for a large number of robots. Even though they are susceptible to deadlocks, and doesn't generate optimum results in terms of time and energy usage, their scalability and simplicity makes them ideal for many scenarios. In this approach, a trajectory is first computed for each robot using previously mentioned single-robot path planners. 
 
+These approaches can be broadly classified into two: rule-based and optimization-based. Typically including potential fields and optimal control laws, rule-based methods work well for low speeds and low agent density. Optimization based approaches are found to produce better results. In this section, we study two optimization based approaches:
+\subsection{Velocity Obstacle}
+Beardsley et al. \cite{alonso2015collision} proposed three optimization based methods, based on collision avoidance: (1) distributed convex, (2) centralized convex, and (3) centralized non-convex. The distributed and centralized convex methods minimize a singular and joint quadratic function subject to quadratic and linear time constraint. Even though these approaches scale well, they do not guarantee the global optimum. The centralized non-convex method, though poorly scalable, ensures the global optimum as it explores the entire solution space. 
+
+In this work, the robot-robot collision check is implemented as a constraint in the optimization problem. Neighbouring agents are modelled as \textit{velocity obstacles}, i.e. the constraints are defines such that the relative reference velocities does not intersect the agents' enveloping shape within the time horizon. As shown in Figure.~\ref{fig:vel_obs}, the relative velocity $\textbf{u}_{ij}$ is constrained to exclude the collision region. 
+
+Berg et al. \cite{bareiss2013reciprocal} extended this approach to account for the linear dynamics of robots using an approach based on \textit{LQR-obstacles}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/velocity_obstacle.png}
+\caption{Visualization of the interaction of two agent. $\textbf{u}_i$ and $\textbf{u}_j$ are the velocities of the ego-agent and its neighbour respectively. $\textbf{u}_{ij}$ is the relative velocity. The velocities are constrained to exclude the collision region (shown in grey) \cite{alonso2015collision}}
+\label{fig:vel_obs}
+\end{figure}
+
+\subsection{Nonlinear Model Predictive Control}
+Collision-avoidance can be seamlessly added to nonlinear predictive control model (NMPC). Even though the high computational demand of this method, along with the complexity of the quadrotor system makes it a challenge, several fast based on Gauss-Newton methods, gradient methods, or generalized minimal residual methods has led to promising results.
+
+Nieto et al. \cite{kamel2017robust} have successfully implemented collision-avoidance of multiple quadrotors in real time using NMPC. In this approach, the trajectory tracking and collision-avoidance is solved in a single optimization problem.This is the state-of-the-art solution for this problem and this section will be dedicated to its implementation. 
+
+Let \textbf{x}
 \section{Spline-based refinement of Waypoints}
