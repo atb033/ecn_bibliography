@@ -77,61 +77,138 @@ If we know the cost of the actions, we could use that to increase the efficiency
 In many cases, it is possible to obtain a heuristic estimate of the cost to reach the goal from any state. Let this function be called $\hat{G}(x)$. This knowledge can be exploited to reduce the number of states explored to reach the goal. The \textit{A* search algorithm} sorts $Q$ according to the sum $C(x) + \hat{G}{x}$.
 
 
-\section{Basic Motion Planning Methods}
+\section{Basic Path Planning Methods}
 \label{sec:basic_motion_planning}
-As mentioned before, the motion planning problems are defined in the configuration space, whereas the graph search algorithms are based on graphs. To connect these problems, we should reformulate the path planning problem, framed on a continuous configuration space, in terms of a graph. This section is dedicated to three different methods of approaching this problem: grid based, potential field based, and sampling based.
-\subsection{Grid Based Search}
+As mentioned before, the path planning problems are defined in the configuration space, whereas the graph search algorithms are based on graphs. To connect these problems, we should reformulate the path planning problem, framed on a continuous configuration space, in terms of a graph. This section is dedicated to three different methods of approaching this problem: grid based, potential field based, and sampling based.
+\subsection{Grid Based Approach}
 \label{sec:grid_search}
-In grid based search, the configuration space is discretized into grids. Each grid point represents a configuration, and the robot may move to an adjacent grid, as long as the line between them is contained in $\mathcal{C}_{free}$. This discretizes the set of actions, and hence the grid search algorithms can be applied to find the path from the start to the goal. 
+In this approach, initially, a grid of locations is sampled in the configuration space. Each vertex $\mathcal{V}$ of the graph represent a configuration. A collision-check function is ran on each grid to check if it is in $\mathcal{C}_{free}$. It is assumed that the grids are close enough in space such that there can be no obstacle between two adjacent grids. In other words, we assume that if two adjacent vertices are in $\mathcal{C}_{free}$, every point in the line joining them is also in the $\mathcal{C}_{free}$. Therefore, we join the vertices by an edge. This discretizes the set of actions, and hence the grid search algorithms can be applied to find the path from the start to the goal. 
 
 Grid based search works well for low dimensional problems. However, this method is computationally infeasible for high-dimensional systems, since the number of points on the grid increase exponentially with configuration space dimension. 
-\subsection{Potential field based Search}
-\label{sec:pot_search}
-Potential field based approaches generate good results with minimal computations. In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
 
-This method can be visualized as a particle moving on a 2D plane under gravity. The goal and the obstacles are represented by a basin and hills respectively. At every instance, the robot tries to move in a direction along decreasing potential, thereby finally reaching the goal. This method gives fast results in many cases, especially when the obstacles are stationary. However, this method may find a non-optimal path, or no path at all if the particle is stuck in a local minima (see Figure.~\ref{fig:potential_search}).
+\subsection{Sampling-based Approach}
+\label{sec:sampling_search}
+Sampling-based search algorithms are the leading methods to tackle higher-dimensional path planning problems. These approaches chooses the points in the configuration space randomly, instead of uniformly, to generate the graph. In other words, the connectivity of $\mathcal{C}_{free}$ is explored by sampling random configurations and trying to connect in a network. Two major sampling-based methods: \textit{rapidly-exploring random trees} (RRT) \cite{lavalle2006planning} and \textit{probabilistic roadmaps} \cite{kavraki1994probabilistic}, are discussed in this section.
+
+\subsubsection{Probabilistic Road-Map (PRM)}
+Probabilistic roadmap is the preferred method if the initial and goal states are not fixed. This method consists of two stages: a preprocessing and query stages. The pseudocode of this method is shown in Algorithm.~\ref{alg:prm}.
+In the preprocessing stage, a random configuration is generated, and neighbours within a predefined distance are connected if all the points in the line joining them are in $\mathcal{C}_{free}$. This step is repeated until a dense graph is generated (see Figure.~\ref{fig:prm}). 
+
+In the query stage, the start and goal configurations are connected to the graph, and an appropriate search algorithm is used to find the path. Once the roadmap has been constructed, it can be used to generate paths between various start and goal locations, as long as the environment is static. This justifies the initial cost of constructing the graph. 
+
+However, in many cases, we are only interested in planning between one specific start and goal locations, and therefore, building a roadmap for such problems is wasteful. In such situations, it would be better to consider approaches that explicitly uses the initial and goal locations in approaching the problem.
+
+
+\begin{algorithm}
+\caption{Probabilistic Road-Map}\label{alg:prm}
+\begin{algorithmic}[1]
+\State $\mathcal{G}$.init($i\gets 0;$)
+\While{$i<N$ }
+\If {$\alpha(i)\in \mathcal{C}_{free}$}
+\State $\mathcal{G}$.add\_vertex($\alpha(i)$); $i\gets i+1$
+\For \textbf{each} $q\in \text{NEIGHBORHOOD}(\alpha(i),\mathcal{G})$
+\If {(\textbf{not} $\mathcal{G}$.same\_component($\alpha(i),q$)) \textbf{and} CONNECT($\alpha(i),q$)}
+\State $\mathcal{G}$.add\_edge($\alpha(i),q$)
+\EndIf
+\EndFor
+\EndIf
+\EndWhile
+\State \textbf{return} $\mathcal{G}$
+\end{algorithmic}
+\end{algorithm}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.6\textwidth]{./images/potential_search}
-\caption[Local minima in potential field based search]{Local minima in potential field based search. \cite{siciliano2010robotics}}
-\label{fig:potential_search}
+\includegraphics[width=0.6\textwidth]{./images/prm}
+\caption[Preprocessing stage of PRM]{Preprocessing stage of PRM. The new randomly sampled point $\alpha(i)$ is connected to the neighbouring vertices in the roadmap}
+\label{fig:prm}
 \end{figure}
 
 
-\subsection{Sampling-based Search}
-\label{sec:sampling_search}
-Sampling-based search algorithms are the leading methods to tackle higher-dimensional path planning problems. In this approach, the connectivity of $\mathcal{C}_{free}$ is explored by sampling random configurations and trying to connect in a network. Here, configurations and actions are represented by nodes and edges respectively. Two major sampling-based methods: \textit{rapidly-exploring random trees} (RRT) \cite{lavalle2006planning} and \textit{probabilistic roadmaps} \cite{kavraki1994probabilistic}, are discussed in this section.
+\subsubsection{Rapidly-Exploring Random Trees (RRT)}
+The RRT algorithm explores the space by randomly sampling a space-filling \textit{tree}. A tree is a special graph, with every vertex connected to a single parent. As shown in Algorithm~\ref{alg:rrt}, with each new sample $\alpha(i)$, a vertex $q_s$ is added between it and the nearest state $q_n$ in tree. $q_s$ lies at a distance $\delta$ from $q_n$ on the line joining $\alpha(i)$ and $q_n$. If $\alpha(i)$ lies in the obstacle region, $q_s$ is generated at the edge of the obstacle as shown in Figure~\ref{fig:rrt}. 
 
-The RRT algorithm explores the space by randomly sampling a space-filling tree. As shown in Algorithm~\ref{alg:rrt}, the tree is rooted at the initial configuration, and with each new sample, a vertex is added between it and the nearest state in tree. Once we obtain a connected graph between the initial state and the goal, search algorithms can be used to compute the best path. 
+This algorithm is very efficient in exploring the free space starting from a configuration. In order to use this for our problem, we usually generate two RRTs, one rooted at the initial configuration and the other at the goal configuration. We then grow both trees until they meet. There are many variations of RRT methods, and they are very effective at tackling high dimensional problems. They can also handle problems with kinodynamic constraints.
 
 \begin{algorithm}
 \caption{Rapidly-exploring Random Trees}\label{alg:rrt}
 \begin{algorithmic}[1]
-\State $G$.init($q_0$)
+\State $\mathcal{G}$.init($q_0$)
 \For{$i$ = 1 \textbf{to} $k$}
 \State $q_{rand}\gets$RAND\_CONFIG()
-\State $q_{near}\gets$NEAREST\_VERTEX($q_{rand},G$)
+\State $q_{near}\gets$NEAREST\_VERTEX($q_{rand},\mathcal{G}$)
 \State $q_{new}\gets$NEW\_CONF($q_{near}, q_{rand}, \Delta q$)
-\State $G$.add\_vertex($q_{new}$)
-\State $G$.add\_edge($q_{near},q_{new}$)
+\State $\mathcal{G}$.add\_vertex($q_{new}$)
+\State $\mathcal{G}$.add\_edge($q_{near},q_{new}$)
 \EndFor
-\State \textbf{return} $G$
-
+\State \textbf{return} $\mathcal{G}$
 \end{algorithmic}
 \end{algorithm}
-Probabilistic roadmap is the preferred method if the initial and goal states are not fixed. This method consists of two stages: a preprocessing and query stages. In the preprocessing stage, a random configuration is generated, and neighbours within a predefined distance are connected. This step is repeated until a dense graph is generated. In the query stage, the start and goal configurations are connected to the graph, and an appropriate search algorithm is used to find the path. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{./images/rrt}
+\caption[Tree expansion in RRT]{If the sampled point $\alpha(i)$ lies inside the obstacle region, the new vertex $q_s$ is formed at the boundary of $\mathcal{C}_{obs}$}
+\label{fig:rrt}
+\end{figure}
+
+The main issue with sampling based approaches is they are not \textit{complete}: i.e. they cannot guarantee the absence of a path even if they are unable to find it. These algorithms are \textit{probabilistically complete}, which means that with enough points, the probability that it finds an existing solution converges to one.
+\subsection{Potential field based Search}
+\label{sec:pot_search}
+Potential field based approaches generate good results with minimal computations. In this method, the robot (represented in C-space), is treated as a particle under the influence of an artificial potential field. The potential field is designed in such a way that the goal has an \textit{attractive potential} and the obstacles has a \textit{repulsive potential}. This ensures that the robot moves towards the goal while avoiding obstacles. 
+
+As shown in Figure.~\ref{fig:potential}, this method can be visualized as a particle moving on a 2D plane under gravity. The goal and the obstacles are represented by a basin and hills respectively. At every instance, the robot tries to move in a direction along decreasing potential, thereby finally reaching the goal. This is done by using the gradient of the potential function to steer the robot. The control velocity \textbf{v} is chosen as:
+\begin{align}
+\textbf{v} \propto -\nabla f_c
+\end{align}
+
+Using this approach, the robot can generate a path by just knowing the potential function. The potential field can be computed by the knowledge of the robot's position, and local sensor data. Moreover, the gradient could be evaluated by using simple finite difference methods. The simplicity of this method makes it appealing to robotic applications. However, this method may find a non-optimal path, or no path at all if the particle is stuck in a local minima.
+
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.6\textwidth]{./images/potential_search}
+%\caption[Local minima in potential field based search]{Local minima in potential field based search. \cite{siciliano2010robotics}}
+%\label{fig:potential_search}
+%\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{./images/potential_goal}
+		\caption{The goal modelled as an attractive potential field, $f_a$}
+        \label{fig:potential_goal}
+    \end{subfigure}
+     %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+    ~\begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{./images/potential_obs}
+		\caption{The obstacles are modelled as a repulsive potential field, $f_r$}
+		\label{fig:potential_obs}    
+	\end{subfigure}
+    ~\begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{./images/potential_combined}
+		\caption{The combined potential field, $f_c=f_a+f_r$}
+		\label{fig:potential_combined}    
+	\end{subfigure}	
+    \caption[Visualization of potential field based search]{Visualization of potential field based search \cite{lavalle2006planning}}
+    \label{fig:potential}
+\end{figure}
+
+\section{Kinodynamic Path Planning}
+\label{sec:kinodynamic}
+Until now, we assumed that the path between any two configurations can be easily determined. However, this might not always be possible in most planning problems in mechanical systems due to the kinematics and dynamics constraints. Planning in such a situation is called \textit{kinodynamic} path planning. 
+
+A classical approach to this problem is to decompose it into two sub-problems. Initially, collision-free a geometric path, called the quasi-static solution, is computed. It can be visualized as a trajectory that the robot can follow in very slow speeds and reach the goal. In the next step, a constrained optimization problem is solved to minimize the time taken to follow the trajectory while respecting the dynamic constraints. 
+
+This decoupled approach is very efficient in finding feasible paths. However, they do not obtain good quality paths since the dynamics is not considered during the path planning stage. To obtain better results, more complex \textit{direct planning} methods are preferred. 
+
+Even though there exists many deterministic approaches like based on optimal control, numerical optimization, and grid search, sampling-based approaches are preferred to solving these problems due to their high dimensionality. In this case, we have to rethink the way in which we connect two configurations. 
 
 \section{Motion Planning for Quadrotors}
 \label{sec:planning_quadrotors}
-%Reasons why we need different algorithm for quadrotors
-% real-time / fast computation
-% velocity/acceleration limits
-% better performance by exploiting dynamics
 This section is dedicated to motion planning methodologies for quadrotors. 
-Our aim is to develop a planner that generates feasible path, that respects the input and dynamics constraints, to bring the quadrotor to the goal as soon as possible. To achieve this, we should exploit the internal dynamics of the quadrotor. Furthermore, it should find plans in real-time at rates around 50 Hz. 
+Our aim is to develop a planner that generates a feasible path, that respects the input and dynamics constraints, to bring the quadrotor to the goal as soon as possible. To achieve this, we should exploit the internal dynamics of the quadrotor. Furthermore, it should find plans in real-time at rates around 50 Hz. 
 
-Until now, we assumed that the path between any two configurations can be easily determined. This is not always possible in the case of quadrotors, which have differential constraints that arise due to geometry and dynamics. \textit{Kinodynamic motion planning} \cite{donald1993kinodynamic} methods can be used to approach such problems. 
+ This is not always possible in the case of quadrotors, which have differential constraints that arise due to geometry and dynamics. \textit{Kinodynamic motion planning} \cite{donald1993kinodynamic} methods can be used to approach such problems. 
 % Decoupled approach
 
 In general, there are two approaches to deal with this problem. In the first approach, the problem is solved by dividing it into global and local planning sub-problems. The global planner, typically implemented using sampling based search, computes a desired set of configurations through which the quadrotor moves while avoiding obstacles. Then the local planner generates time parametrized \textit{trajectories} that can be realized by the vehicle. This method is simpler, but it may not lead to a global optimum as the geometric path is decided in advance, without considering the system dynamics. 
