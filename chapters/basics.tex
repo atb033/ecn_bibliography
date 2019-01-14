@@ -12,22 +12,37 @@ Each distinct situation of a world is called a \textit{state}, $x$, and the set 
 \end{align}
 The set of all possible actions for each state is defined as the \textit{action space}, $U(x)$.
 
-%The system has an initial state, $x_I$, and a set of goal states, $X_G$. The aim of the planner is to find a sequence of actions that transforms the system from the initial state, $x_I$, to a final state, $x_G \subset X_G$.
-
-%The \textit{configuration space} of a robot is the set of all configurations that could be achieved by it. For instance, the configuration space of a rigid body that moves on a plane is the 3D space defined by the special Euclidean group SE(2). The configuration space, which may be considered as a special state space, is powerful abstraction tool that used to solve the path planning problem. 
-
-In path planning, we work with a special state space called the \textit{configuration space}, or C-space. The configuration space, $\mathcal{C}$, of a robot is the set of all possible configurations, $x$, that could be achieved by it. The real beauty of C-space is in the way it deals with the obstacles. Suppose that the world, $\mathcal{W}$, contains an obstacle region, $
-\mathcal{O}$. Assuming that the robot, $\mathcal{A}\subset\mathcal{W}$, the \textit{obstacle region}, $\mathcal{C}_{obs}\subseteq\mathcal{C}$, is defined as
+In path planning, we work with a special state space called the \textit{configuration space}, or C-space. The configuration space, $\mathcal{C}$, of a robot is the set of all possible configurations, $x$, that could be achieved by it. The real beauty of C-space is in the way it deals with the obstacles. Suppose that the world, $\mathcal{W}$, contains an obstacle region, $\mathcal{O}$. Assuming that the robot, $\mathcal{A}\subset\mathcal{W}$, the \textit{obstacle region}, $\mathcal{C}_{obs}\subseteq\mathcal{C}$, is defined as
 \begin{align}
 	\mathcal{C}_{obs} = \{x\in\mathcal{C} | \mathcal{A}(x)\cap\mathcal{O}\neq\emptyset\}
 \end{align}
-In other words, $\mathcal{C}_{obs}$ is the set of all configurations at which the robot intersects the obstacle region. The \textit{free space}, defined as, $\mathcal{C}_{free} = \mathcal{C} \backslash  \mathcal{C}_{obs}$, is the set of all collision free configurations of the robot. 
+In other words, $\mathcal{C}_{obs}$ is the set of all configurations at which the robot intersects the obstacle region (See Figure.~\ref{fig:conf}). The \textit{free space}, defined as, $\mathcal{C}_{free} = \mathcal{C} \backslash  \mathcal{C}_{obs}$, is the set of all collision free configurations of the robot. 
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{./images/conf_space_1}
+		\caption{The generation of the configuration obstacle $\mathcal{C}_{obs}$}
+        \label{fig:conf_1}
+    \end{subfigure}
+     %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+    ~\begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{./images/conf_space_2}
+		\caption{The configuration space is obtained by sliding the triangle around the obstacle while keeping them both in contact}
+		\label{fig:conf_2}    
+	\end{subfigure}
+    \caption[Visualization of configuration space obstacle]{Visualization of configuration space obstacle \cite{lavalle2006planning}}
+    \label{fig:conf}
+\end{figure}
+
 
 Let $x_I \in \mathcal{C}_{free}$ and $x_G \in \mathcal{C}_{free}$ be the \textit{initial configuration} and  the \textit{final configuration} respectively. A path planning algorithm aims to compute a continuous path starting at $x_I$ and ending at $x_G$. 
 
 \subsection{Graph Search Algorithms}
 \label{sec:graph_search_algo}
-In this section, we cover the major graph search algorithms that will be useful in path planning. Forward search algorithms start at the initial state and explores the graph until encountering the goal state. The general template of such algorithms \cite{lavalle2006planning} is shown in Algorithm~\ref{alg:fsearch}.
+\textit{State transition graph} is a convenient tool that could be used to approach path planning problems. In the graph $\mathcal{G}$, the states and actions form the vertices $\mathcal{V}$ and directed edges $\mathcal{E}$ respectively. A directed edge  from $x\in X$ to $x'\in X$ exists only if there exists an action $u\in U$ such that $x'=f(x,u)$. With this representation, the graph search algorithms could be directly applied to the path planning problem.
+
+In this section, we cover the major graph search algorithms like breadth first search, length first search and A* search. These forward search algorithms start at the initial state and explores the graph until encountering the goal state. The general template of such algorithms \cite{lavalle2006planning} is shown in Algorithm~\ref{alg:fsearch}.
 
 \begin{algorithm}
 \caption{Forward Search}\label{alg:fsearch}
@@ -64,6 +79,7 @@ In many cases, it is possible to obtain a heuristic estimate of the cost to reac
 
 \section{Basic Motion Planning Methods}
 \label{sec:basic_motion_planning}
+As mentioned before, the motion planning problems are defined in the configuration space, whereas the graph search algorithms are based on graphs. To connect these problems, we should reformulate the path planning problem, framed on a continuous configuration space, in terms of a graph. This section is dedicated to three different methods of approaching this problem: grid based, potential field based, and sampling based.
 \subsection{Grid Based Search}
 \label{sec:grid_search}
 In grid based search, the configuration space is discretized into grids. Each grid point represents a configuration, and the robot may move to an adjacent grid, as long as the line between them is contained in $\mathcal{C}_{free}$. This discretizes the set of actions, and hence the grid search algorithms can be applied to find the path from the start to the goal. 
@@ -78,7 +94,7 @@ This method can be visualized as a particle moving on a 2D plane under gravity. 
 \begin{figure}
 \centering
 \includegraphics[width=0.6\textwidth]{./images/potential_search}
-\caption{Local minima in potential field based search. \cite{siciliano2010robotics}}
+\caption[Local minima in potential field based search]{Local minima in potential field based search. \cite{siciliano2010robotics}}
 \label{fig:potential_search}
 \end{figure}
 
@@ -170,10 +186,10 @@ As the inputs to the system was found to be functions of the fourth derivatives 
 
 The method presented in  \cite{richter2016polynomial} jointly optimizes polynomial path segments in an unconstrained quadratic program to solve the minimum-snap trajectory problem. The output is numerically stable for high-order polynomials and large numbers of segments. As shown in Figure.~\ref{fig:bry_poly}, they generated fast flight paths through cluttered environments by coupling this technique with an appropriate kinematic planner. In addition, an implicit segment time allocation strategy, based on a single user-defined parameter on aggressiveness, led to far superior results.
 
-\begin{figure}[h!]
+\begin{figure}
 \centering
 \includegraphics[width=0.6\textwidth]{./images/bry_poly.png}
-\caption{Minimum-snap trajectory generation using unconstrained quadratic program. \cite{richter2016polynomial}}
+\caption[Minimum-snap trajectory generation using unconstrained quadratic program]{Minimum-snap trajectory generation using unconstrained quadratic program. \cite{richter2016polynomial}}
 \label{fig:bry_poly}
 \end{figure}
 
@@ -187,7 +203,7 @@ Recent work by Kumar et al. \cite{kumar2017search} aims at computing globally op
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.6\textwidth]{./images./search_kumar.png}
-\caption{Path planning performed at non-zero inital velocity. \cite{kumar2017search} generates the more natural and time optimal magenta curve, where as other approaches gives rise to the red-dashed curve.}
+\caption[Path planning performed at non-zero inital velocity.]{Path planning performed at non-zero inital velocity. The search based approach shown in \cite{kumar2017search} generates the more natural and time optimal magenta curve, where as other approaches gives rise to the red-dashed curve.}
 \label{fig:search_kumar}
 \end{figure}
 

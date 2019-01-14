@@ -20,7 +20,7 @@ Initially, M* algorithm plans for each robot separately, without considering col
         \caption{Motion of multiple robots in the shared workspace}
         \label{fig:mstarb}
     \end{subfigure}
-    \caption{Visualization of the variable dimensionality workspace in M* algorithm. When two robots collide, the local dimensionality is increased to 2 (represented by a square). Similarly, when three robots collide the dimensionality is 3 (cube). \cite{wagner2011m} }\label{fig:mstar}
+    \caption[Visualization of the variable dimensionality workspace in M* algorithm.]{Visualization of the variable dimensionality workspace in M* algorithm. When two robots collide, the local dimensionality is increased to 2 (represented by a square). Similarly, when three robots collide the dimensionality is 3 (cube). \cite{wagner2011m} }\label{fig:mstar}
 \end{figure}
 
 Like A* algorithm, M* explores a list of vertices sorted based on the sum of the cost of the cheapest path and a heuristic cost. M* considers only a limited set of neighbours determined by a \textit{collision set}, thus minimizing the dimensionality. M* can be seen as performing A* search in a  dynamically updating graph, $G^\#$. M* algorithm can handle problems involving a high number of robots, while retaining bounded optimality and \textit{completeness}. 
@@ -40,7 +40,7 @@ The graph plans from these grid based search methods cannot be directly interpre
 \begin{figure}
 \centering
 \includegraphics[width=0.6\textwidth]{./images/CBS}
-\caption{Example of CBS: (I) MAPF instance, and (II) its Constraint-Tree (CT)}
+\caption[Visualization of Conflict Based Search]{Visualization of Conflict Based Search (CBS): (I) MAPF instance, and (II) its Constraint-Tree (CT)}
 \label{fig:cbs}
 \end{figure}
 
@@ -76,12 +76,13 @@ Using sequential convex programming, these constraints can be replaced with conv
 \text{s.t.} \quad &A_{eq}\chi=b_{eq}\\&A_{in}\chi\leq b_{in}
 \end{split}
 \end{align}
-The optimum solution was found using QP. A demonstration of this method can be seen in Figure
+The optimum solution was found using QP. A demonstration of this method can be seen in Figure.~\ref{fig:sqp}.
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/dandrea_scp.png}
-\caption{Multi-agent trajectory planning using sequential quadratic programming. \cite{augugliaro2012generation}}
+\caption[Multi-agent trajectory planning using sequential quadratic programming.]{Multi-agent trajectory planning using sequential quadratic programming. \cite{augugliaro2012generation}}
+\label{fig:sqp}
 \end{figure}
 
 In \cite{mellinger2012mixed}, a Mixed-Integer Quadratic Program (MIQP) is solved to generate feasible paths. These methods are capable of creating smooth, optimal solutions. However, these methods are often tightly and hence do not scale  up well to large teams. 
@@ -137,7 +138,7 @@ Berg et al. \cite{bareiss2013reciprocal} extended this approach to account for t
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/velocity_obstacle.png}
-\caption{Visualization of the interaction of two agent. $\textbf{u}_i$ and $\textbf{u}_j$ are the velocities of the ego-agent and its neighbour respectively. $\textbf{u}_{ij}$ is the relative velocity. The velocities are constrained to exclude the collision region (shown in grey) \cite{alonso2015collision}}
+\caption[Collision avoidance of a neighbouring agent using the principle of velocity obstacles]{Visualization of the interaction of two agents using velocity obstacle constraints. $\textbf{u}_i$ and $\textbf{u}_j$ are the velocities of the ego-agent and its neighbour respectively. $\textbf{u}_{ij}$ is the relative velocity. The velocities are constrained to exclude the collision region (shown in grey) \cite{alonso2015collision}}
 \label{fig:vel_obs}
 \end{figure}
 
@@ -146,5 +147,65 @@ Collision-avoidance can be seamlessly added to nonlinear predictive control mode
 
 Nieto et al. \cite{kamel2017robust} have successfully implemented collision-avoidance of multiple quadrotors in real time using NMPC. In this approach, the trajectory tracking and collision-avoidance is solved in a single optimization problem.This is the state-of-the-art solution for this problem and this section will be dedicated to its implementation. 
 
-Let \textbf{x}
-\section{Spline-based refinement of Waypoints}
+Let \textbf{x} and \textbf{u} be the state vector and control input respectively. The state transition equation:
+\begin{align}
+\dot{\textbf{x}}=f(\textbf{x,u})
+\end{align}
+The NMPC controller solves the following finite horizon optimal control problem (OCP) online at each time step.
+\begin{align}
+\begin{split}
+\min_{\textbf{u}(t)}\quad &\int_{t=0}^{T} \left(J_x(\textbf{x}(t),\textbf{x}_{ref}(t))+J_u(\textbf{u}(t),\textbf{u}_{ref}(t))+J_c(\textbf{x}(t))\right) dt\\
+s.t.\quad & \dot{\textbf{x}}=f(\textbf{x,u})\\
+&\textbf{u}(t)\in \mathcal{U}\\
+&\textbf{G(x}(t)) \leq 0 \\
+&\textbf{x}(0)=\textbf{x}(t_0)
+\end{split}
+\end{align}
+where, $J_x$ is the cost of deviating from the reference trajectory $x_{ref}$, $J_u$ is the penalty in control input deviation from $u_{ref}$,  \textbf{G} is the hard-constraints in the distance between agents, and $\mathcal{U}$ is the set of admissible control inputs.
+\begin{align}
+&J_x(\textbf{x}(t), \textbf{x}_{ref}(t)) = \Vert \textbf{x}(t)-\textbf{x}_{ref}(t)\Vert ^2\\
+&J_u(\textbf{u}(t), \textbf{u}_{ref}(t)) = \Vert \textbf{u}(t)-\textbf{u}_{ref}(t)\Vert ^2
+\end{align}
+
+The collision cost $J_c(\textbf{x}(t))$ is based on a smooth collision function:
+\begin{align}
+J_c(\textbf{x}(t))=\sum_{j=1}^{N_{agents}}\frac{Q_c}{1+\exp\kappa_j(d_j(t)-r_{th})}
+\end{align}
+Where, $Q_c$ is a tuning parameter, and $r_{th}$ is a threshold distance between the agents. The parameter $\kappa_j$ decides the smoothness of the cost function. $d_j = \Vert \textbf{p}(t)-\textbf{p}(t)\Vert ^2$ is the distance to the neighbouring agent $j$. For extra safety, tight-hard constraints, $\textbf{G(x)}$, are given on the distance between two agents:
+\begin{align}
+\textbf{G}_j = -d_j^2+r_{min}^2
+\end{align}
+where, $r_{min}$ is chosen to be less than $r_{th}$ to ensure that these non-convex constraints are activated only if the the collision-potential function $J_c$ prevent the robot from approaching a hazardous situation.
+
+In the controller, every agent predicts the future position of every other agent using a constant velocity model. To achieve this, there must be a network that communicates the current position and velocity of every agent to every other agent. The position of $j$th agent is estimated as:
+\begin{align}
+\textbf{p}_j(t) = \textbf{p}_j(t_0) + \textbf{v}_j(t_0)(t-t_0)
+\end{align} 
+Moreover, the uncertainty of the state, which is inherent to robotic applications, is propagated based on an Extended Kalman Filter (EKF).
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\linewidth]{./images/cost_function_nmpc}
+\caption[Collision cost function vs smoothness parameter]{Variation of the collision cost function w.r.t. the smoothness parameter $\kappa$. \cite{kamel2017robust}}
+\end{figure}
+
+This method can handle priority just by modifying the \textit{connectivity graph} between agents. Agents of higher priority would not consider the collision cost with those of lower priority while performing the manoeuvre. Therefore, only lower priority agents will perform collision avoidance. Experiments and simulations showed that assigning a priority leads to smoother and faster trajectories. 
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \includegraphics[width=\textwidth]{./images/collision_nmpc_1}
+        \caption{No priority among agents}
+        \label{fig:coll_nmpc1}
+    \end{subfigure}
+    \\ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+    \begin{subfigure}[b]{\textwidth}
+        \includegraphics[width=\textwidth]{./images/collision_nmpc_2}
+        \caption{Predefined priority among agents}
+        \label{fig:coll_nmpc2}
+    \end{subfigure}
+    \caption[Position swapping of multiple agents using NMPC]{Position swapping of multiple agents using NMPC. \cite{kamel2017robust} }\label{fig:coll_nmpc}
+\end{figure}
+
+%\section{Spline-based refinement of Waypoints}
