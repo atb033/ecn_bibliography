@@ -1,0 +1,55 @@
+% what is the objectives of the thesis
+
+\section{Summary of Objectives}
+The aim of the thesis is to implement motion planning of multiple fleets of quadrotors with different priorities. The algorithm should be able to generate collision free trajectories for each robot in real time, by taking into consideration the uncertainties in sensing and communication delays. The algorithm should be tested in simulations and then implemented in the real system.
+
+This work would have applications in multiple scenarios. For instance, in the case of first-response to a disaster, there could be a fleet of drones that scout the location, and another fleet that transports supplies. Evidently, the second fleet has a higher priority. Therefore, the planner should create collision free trajectories, minimizing the task completion time of the second fleet.
+
+\section{Work Plan}
+
+The high dimensionality of this problem necessitates the usage of complex multi-agent path planning methods. However, since we do not plan to work in maze like environments and collisions are not so frequent, it is not necessary to use grid-based multi-agent path planning algorithms like M* search or conflict based search. 
+
+A reactive approach is appropriate for our application as it generates fast results and scales well. Initially, the minimum time path for each robot will be computed using a sampling based search followed by a smoothing step \cite{gao2017gradient}. Then a Nonlinear Model Predictive Controller (NMPC) would be used to track this trajectory. The collision avoidance constraints would be added to the receding time-horizon optimal control problem of NMPC \cite{kamel2017robust}. 
+
+The path planner designed based on this ideas would be first implemented in ROS environment (MoveIt or Gazebo), and then on the real system. To summarize, the task can be divided into the following steps:
+
+\begin{itemize}
+\item Literature Review
+\item Path Planner Design
+\item Implementation in ROS
+\item Integration to real fleet
+\end{itemize}
+
+\section{Schedule}
+
+\begin{ganttchart}[x unit=1cm,
+y unit title=1cm,
+y unit chart=0.6cm,
+hgrid,vgrid,
+bar/.style={fill=gray!50}]{1}{9}
+\gantttitle{Timeline}{9} \\
+\gantttitle{Dec}{1}
+\gantttitle{Jan}{1}
+\gantttitle{Feb}{1}
+\gantttitle{Mar}{1}
+\gantttitle{Apr}{1}
+\gantttitle{May}{1}
+\gantttitle{Jun}{1}
+\gantttitle{Jul}{1}
+\gantttitle{Aug}{1}\\
+%\gantttitlelist{1,...,9}{1} \\
+%\ganttgroup{Group 1}{1}{7} \\
+\ganttbar{State of the art}{1}{2} \\
+\ganttbar{Bibliography defence}{2}{2} \\
+\ganttbar{Studying available path planning codes}{2}{3} \\
+\ganttbar{Development of path planning method}{3}{4} \\
+\ganttbar{Implementation in ROS}{4}{5} \\
+\ganttbar{Mid term presentation}{5}{5} \\
+\ganttbar{Implementation in real fleet}{5}{7} \\
+\ganttbar{Analysis of results}{7}{8} \\
+\ganttbar{Writing thesis}{7}{9} \\
+\ganttbar{Master thesis defence}{9}{9} 
+\end{ganttchart}
+
+
+

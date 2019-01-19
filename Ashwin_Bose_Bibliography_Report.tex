@@ -3,46 +3,50 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{subcaption}
+\usepackage{pgfgantt}
 
 \begin{document}
 
 \include{thesisfront}  
  
 \section*{Abstract}
-Quadrotors have many application... bla bla
+\input{./chapters/abstract}
 \newpage
 \section*{Acknowledgements}
-I thank my bla bla bla 
-
+\input{./chapters/ackn}
 \newpage
 
 \section*{Notations}
-
-% \newpage
-
+\input{./chapters/notations}
 \section*{Abbreviations}
- 
-% \newpage
+\input{./chapters/abbr}
  
 \listoffigures
-
-%\listoftables
 
 \tableofcontents
 
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}	 
- 
+\input{./chapters/intro}
 
 \chapter{Path Planning}
-\input{./chapters/basics} 
+\label{chap:path}
+\input{./chapters/basics}
+
+\chapter{Path Planning and Control of Quadrotors}
+\label{chap:planning_quadrotors}
+ \input{./chapters/quad}
+
 \chapter{Multi-Agent Path Planning} 
+\label{chap:multi}
 \input{./chapters/multi_agent} 
+
 \chapter{Work Outline}
- 
-\chapter*{Conclusion}
-\addcontentsline{toc}{chapter}{Conclusion}
+\label{chap:work}
+\input{./chapters/work_outline}
+%\chapter*{Conclusion}
+%\addcontentsline{toc}{chapter}{Conclusion}
  
   
 \newpage
